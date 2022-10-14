@@ -3,7 +3,6 @@ package io.micronaut.http.client.format
 import io.micronaut.context.annotation.Property
 import io.micronaut.context.annotation.Requires
 import io.micronaut.core.annotation.Introspected
-import io.micronaut.core.beans.exceptions.IntrospectionException
 import io.micronaut.core.convert.exceptions.ConversionErrorException
 import io.micronaut.core.convert.format.Format
 import io.micronaut.http.HttpRequest
@@ -97,6 +96,17 @@ class ClientFormatSpec extends Specification {
         new Cafe(name: "AAA", address: "here")          | "param[name]=AAA&param[address]=here"
     }
 
+    void "test deep-object format custom param name"() {
+        given:
+        def filterMap = ["has": "resources", "site": "foobar", "external_id": "47917"]
+
+        when:
+        def resultQuery = client.deepObjectFormattedValueCustomName(filterMap, "bar")
+
+        then:
+        resultQuery == "filter[has]=resources&filter[site]=foobar&filter[external_id]=47917&include=bar"
+    }
+
     void "test cannot annotate primitive type with format"() {
         when:
         var string = "hello"
@@ -140,6 +150,9 @@ class ClientFormatSpec extends Specification {
 
         @Get("/queryIdentity")
         String deepObjectFormattedValue(@QueryValue @Format("DEEP_OBJECT") Object param)
+
+        @Get("/queryIdentity")
+        String deepObjectFormattedValueCustomName(@QueryValue @Format("DEEP_OBJECT") Object filter, @QueryValue String include)
     }
 
     @Requires(property = 'spec.name', value = 'ClientFormatSpec')
